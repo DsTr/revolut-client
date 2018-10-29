@@ -1,6 +1,7 @@
 package com.example.dmitrykostin.revolut_client.Revolut.response
 
 import com.squareup.moshi.Json
+import java.util.*
 
 typealias TransactionList = List<Transaction> ;
 
@@ -9,8 +10,8 @@ data class Transaction(
     @Json(name = "legId") val legId: String?,
     @Json(name = "type") val type: String?,
     @Json(name = "state") val state: String?,
-    @Json(name = "startedDate") val startedDate: Long?,
-    @Json(name = "updatedDate") val updatedDate: Long?,
+    @Json(name = "startedDate") val startedDate: Date?,
+    @Json(name = "updatedDate") val updatedDate: Date?,
     @Json(name = "completedDate") val completedDate: Long?,
     @Json(name = "currency") val currency: String?,
     @Json(name = "amount") val amount: Int?,

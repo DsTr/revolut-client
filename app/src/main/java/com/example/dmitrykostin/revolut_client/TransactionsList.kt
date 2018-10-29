@@ -8,12 +8,14 @@ import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import com.example.dmitrykostin.revolut_client.Revolut.Api
+import com.example.dmitrykostin.revolut_client.Revolut.response.Transaction
 
 import kotlinx.android.synthetic.main.activity_transactions_list.*
 import kotlinx.android.synthetic.main.content_transactions_list.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import android.support.v7.widget.DividerItemDecoration
 
 class TransactionsList : BaseActivityWithCoroutineScope() {
     companion object {
@@ -27,6 +29,7 @@ class TransactionsList : BaseActivityWithCoroutineScope() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var viewAdapter: RecyclerView.Adapter<*>
     private lateinit var viewManager: RecyclerView.LayoutManager
+    private val transactionListDataset: ArrayList<Transaction> = ArrayList(0)
 
     private var authorizationHolder: AuthorizationHolder? = null
 
@@ -35,12 +38,12 @@ class TransactionsList : BaseActivityWithCoroutineScope() {
         setContentView(R.layout.activity_transactions_list)
         setSupportActionBar(toolbar)
 
-        val dataSet = arrayOf("a", "b", "c", "gfgfg", "ggr3434gger", "fdfdf343");
         viewManager = LinearLayoutManager(this)
-        viewAdapter = TransactionsListViewAdapter(dataSet)
+        viewAdapter = TransactionsListViewAdapter(transactionListDataset)
 
         transaction_list.layoutManager = viewManager
         transaction_list.adapter = viewAdapter
+        transaction_list.addItemDecoration(DividerItemDecoration(this, LinearLayoutManager.VERTICAL))
         transaction_list.setHasFixedSize(true)
 
         val sharedPreferences = getSharedPreferences()
@@ -58,10 +61,18 @@ class TransactionsList : BaseActivityWithCoroutineScope() {
 
     private fun loadTransactions() = launch {
         if (authorizationHolder != null) {
-            val (transactionList, err) = async(Dispatchers.Default) {
-                api.getTransactions(authorizationHolder!!)
-            }.await()
-            transactionList
+            val authorizationHolderConstant = authorizationHolder
+            if (null != authorizationHolderConstant) {
+                val (transactionList, err) = async(Dispatchers.Default) {
+                    api.getTransactions(authorizationHolderConstant)
+                }.await()
+                if (transactionList != null) {
+                    transactionListDataset.addAll(transactionList)
+                    viewAdapter.notifyDataSetChanged()
+                }
+            } else {
+                startLoginActivity()
+            }
         }
     }
 
