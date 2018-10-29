@@ -110,7 +110,6 @@ class LoginActivity : BaseActivityWithCoroutineScope() {
         val (confirmResponse, err) = async(Dispatchers.Default) {
             api.confirm(phone, code)
         }.await()
-        Log.d("DEBUGGG", phone)
         if (err == null && confirmResponse != null) {
             val result = Intent()
             result.putExtra(INTENT_KEY_USER_ID, confirmResponse.user.id)
@@ -167,9 +166,29 @@ class LoginActivity : BaseActivityWithCoroutineScope() {
 //            })
     }
 
+    override fun onSaveInstanceState(outState: Bundle?) {
+        super.onSaveInstanceState(outState)
+        val phoneStr = phone.text.toString()
+        outState?.putString(LAST_ENTERED_PHONE_ID, phoneStr)
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
+        super.onRestoreInstanceState(savedInstanceState)
+        val phoneStr = phone.text.toString()
+        val savedPhone = savedInstanceState?.getString(LAST_ENTERED_PHONE_ID)
+        if (null != savedPhone) {
+            // TODO: Можно ли нормально вытавить текст без 2 методов?
+            with(phone.text) {
+                clear()
+                insert(0, savedPhone)
+            }
+        }
+    }
+
     companion object {
         val TOKEN_REPLY = "com.example.dmitrykostin.revolut_client";
         val INTENT_KEY_TOKEN = "access_token";
         val INTENT_KEY_USER_ID = "user_id";
+        val LAST_ENTERED_PHONE_ID = "android:enteredPhone"
     }
 }

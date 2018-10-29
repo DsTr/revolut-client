@@ -16,6 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import android.support.v7.widget.DividerItemDecoration
+import android.widget.Toast
 
 class TransactionsList : BaseActivityWithCoroutineScope() {
     companion object {
@@ -71,6 +72,7 @@ class TransactionsList : BaseActivityWithCoroutineScope() {
                     viewAdapter.notifyDataSetChanged()
                 }
             } else {
+                Toast.makeText(baseContext, "Internal error, authorize again", Toast.LENGTH_SHORT).show();
                 startLoginActivity()
             }
         }
