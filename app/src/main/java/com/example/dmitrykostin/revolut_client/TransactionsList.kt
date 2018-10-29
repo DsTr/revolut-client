@@ -103,6 +103,7 @@ class TransactionsList : BaseActivityWithCoroutineScope() {
                         commit()
                     }
                     this.authorizationHolder = AuthorizationHolder(userId, token)
+                    loadTransactions()
                 }
             }
         }

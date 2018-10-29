@@ -18,7 +18,7 @@ data class Transaction(
     @Json(name = "fee") val fee: Int?,
     @Json(name = "balance") val balance: Int?,
     @Json(name = "description") val description: String?,
-    @Json(name = "rate") val rate: Int?,
+    @Json(name = "rate") val rate: Float?,
     @Json(name = "merchant") val merchant: Merchant?,
     @Json(name = "counterpart") val counterpart: Counterpart?,
     @Json(name = "reason") val reason: String?,
