@@ -145,25 +145,6 @@ class LoginActivity : BaseActivityWithCoroutineScope() {
                     }
                 })
         }
-//        login_form.visibility = if (activityState == LoginActivityState.LOGIN) View.VISIBLE else View.GONE
-//        login_form.animate()
-//            .setDuration(shortAnimTime)
-//            .alpha((if (show) 0 else 1).toFloat())
-//            .setListener(object : AnimatorListenerAdapter() {
-//                override fun onAnimationEnd(animation: Animator) {
-//                    login_form.visibility = if (show) View.GONE else View.VISIBLE
-//                }
-//            })
-//
-//        progress.visibility = if (show) View.VISIBLE else View.GONE
-//        progress.animate()
-//            .setDuration(shortAnimTime)
-//            .alpha((if (show) 1 else 0).toFloat())
-//            .setListener(object : AnimatorListenerAdapter() {
-//                override fun onAnimationEnd(animation: Animator) {
-//                    progress.visibility = if (show) View.VISIBLE else View.GONE
-//                }
-//            })
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {
