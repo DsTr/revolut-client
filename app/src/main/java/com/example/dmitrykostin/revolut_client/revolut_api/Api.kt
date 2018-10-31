@@ -1,19 +1,15 @@
-package com.example.dmitrykostin.revolut_client.Revolut
+package com.example.dmitrykostin.revolut_client.revolut_api
 
-import com.example.dmitrykostin.revolut_client.AuthorizationHolder
-import com.example.dmitrykostin.revolut_client.Revolut.response.ConfirmResponse
-import com.example.dmitrykostin.revolut_client.Revolut.response.Transaction
-import com.example.dmitrykostin.revolut_client.Revolut.response.TransactionList
+import com.example.dmitrykostin.revolut_client.CredentialsHolder
+import com.example.dmitrykostin.revolut_client.revolut_api.response.ConfirmResponse
+import com.example.dmitrykostin.revolut_client.revolut_api.response.Transaction
 import com.github.kittinunf.fuel.core.*
 import com.github.kittinunf.fuel.moshi.moshiDeserializerOf
 import com.github.kittinunf.result.Result
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import org.json.JSONObject
-import java.lang.reflect.Type
-import java.util.*
 
 
 class Api {
@@ -72,7 +68,7 @@ class Api {
         return result;
     }
 
-    fun getTransactions(authorizationHolder: AuthorizationHolder) : Result<List<Transaction>, FuelError>
+    fun getTransactions(credentialsHolder: CredentialsHolder) : Result<List<Transaction>, FuelError>
     {
         val transactionsList = Types.newParameterizedType(List::class.java, Transaction::class.java)
         val adapter: JsonAdapter<List<Transaction>> = moshi.adapter(transactionsList)
@@ -89,7 +85,7 @@ class Api {
             "/user/current/transactions",
             params
         )
-            .authenticate(authorizationHolder.userId, authorizationHolder.accessToken)
+            .authenticate(credentialsHolder.userId, credentialsHolder.accessToken)
             .responseObject(moshiDeserializerOf(adapter))
 
         return result;

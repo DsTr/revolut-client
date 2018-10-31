@@ -7,7 +7,7 @@
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         tools:showIn="@layout/activity_transactions_list"
-        tools:context=".TransactionsList">
+        tools:context=".mvp.activity.TransactionsList">
 
     <android.support.v7.widget.RecyclerView
             android:layout_width="match_parent"

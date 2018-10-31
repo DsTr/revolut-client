@@ -1,4 +1,4 @@
-package com.example.dmitrykostin.revolut_client.Revolut.response
+package com.example.dmitrykostin.revolut_client.revolut_api.response
 
 import com.squareup.moshi.Json
 import java.util.*

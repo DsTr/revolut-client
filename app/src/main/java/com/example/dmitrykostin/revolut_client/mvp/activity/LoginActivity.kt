@@ -1,4 +1,4 @@
-package com.example.dmitrykostin.revolut_client
+package com.example.dmitrykostin.revolut_client.mvp.activity
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
@@ -6,24 +6,18 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.text.TextUtils
-import android.util.Log
 import android.view.View
 import android.view.inputmethod.EditorInfo
-import com.example.dmitrykostin.revolut_client.Revolut.Api
+import com.example.dmitrykostin.revolut_client.R
+import com.example.dmitrykostin.revolut_client.mvp.representer.LoginRepresenter
+import com.example.dmitrykostin.revolut_client.revolut_api.Api
 
 import kotlinx.android.synthetic.main.activity_login.*
 import kotlinx.coroutines.*
 
-class LoginActivity : BaseActivityWithCoroutineScope() {
-    private enum class LoginActivityState {
-        LOGIN,
-        LOADER,
-        CONFIRMATION,
-    }
+class LoginActivity : BaseActivity() {
 
-    private val api by lazy {
-        Api()
-    }
+    lateinit var loginRepresenter: LoginRepresenter;
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,7 +35,25 @@ class LoginActivity : BaseActivityWithCoroutineScope() {
         phone.text.insert(0,"+4407446744008");
         email_sign_in_button.setOnClickListener { attemptLogin() }
         confirm_sms_button.setOnClickListener { attemptConfirm() }
-        cancel_confirm_sms_button.setOnClickListener { switchFormState(LoginActivityState.LOGIN) }
+
+        loginRepresenter = LoginRepresenter()
+        loginRepresenter.switchViewStateCb = {switchFormState(it)}
+        loginRepresenter.wrongCredentialsCb = {
+            password.error = getString(R.string.error_invalid_password)
+            password.requestFocus()
+        }
+        loginRepresenter.wrongConfirmationNumberCb = {
+            sms_code_input.error = "Wrong code";
+        }
+        loginRepresenter.credentialsReceivedCb = { userId, accessToken ->
+            val result = Intent()
+            result.putExtra(LoginActivity.INTENT_KEY_USER_ID, userId)
+            result.putExtra(LoginActivity.INTENT_KEY_TOKEN, accessToken)
+            setResult(Activity.RESULT_OK, result)
+            finish()
+        }
+
+        cancel_confirm_sms_button.setOnClickListener { loginRepresenter.cancelConfirmation() }
     }
 
     private fun attemptLogin() {
@@ -53,85 +65,33 @@ class LoginActivity : BaseActivityWithCoroutineScope() {
         val phoneStr = phone.text.toString()
         val passwordStr = password.text.toString()
 
-        var cancel = false
-
-        // Check for a valid email address.
-        if (TextUtils.isEmpty(phoneStr)) {
-            phone.error = getString(R.string.error_field_required)
-            phone.requestFocus()
-            cancel = true
-        }
-
-        if (!cancel) {
-            launchLogin(phoneStr, passwordStr)
-        }
-    }
-
-    private fun launchLogin(phone: String, user_password: String) = launch {
-        switchFormState(LoginActivityState.LOADER)
-
-        val (_, err) = async(Dispatchers.Default) {
-            api.signIn(phone, user_password)
-        }.await()
-
-        if (err == null) {
-            switchFormState(LoginActivityState.CONFIRMATION)
-        } else {
-            password.error = getString(R.string.error_invalid_password)
-            password.requestFocus()
-            switchFormState(LoginActivityState.LOGIN)
-        }
+        loginRepresenter.tryToLogin(phoneStr, passwordStr)
     }
 
     private fun attemptConfirm() {
         sms_code_input.error = null
 
         // Store values at the time of the login attempt.
-        val smsCodeText = sms_code_input.text.toString()
         val phoneStr = phone.text.toString()
+        val smsCodeText = sms_code_input.text.toString()
 
-        var cancel = false
-
-        // Check for a valid email address.
-        if (TextUtils.isEmpty(smsCodeText)) {
-            sms_code_input.error = getString(R.string.error_field_required)
-            sms_code_input.requestFocus()
-            cancel = true
-        }
-
-        if (!cancel) {
-            processConfirmRequest(phoneStr, smsCodeText)
-        }
-    }
-
-    private fun processConfirmRequest(phone: String, code: String) = launch {
-        switchFormState(LoginActivityState.LOADER)
-
-        val (confirmResponse, err) = async(Dispatchers.Default) {
-            api.confirm(phone, code)
-        }.await()
-        if (err == null && confirmResponse != null) {
-            val result = Intent()
-            result.putExtra(INTENT_KEY_USER_ID, confirmResponse.user.id)
-            result.putExtra(INTENT_KEY_TOKEN, confirmResponse.accessToken)
-            setResult(Activity.RESULT_OK, result)
-            finish()
-        } else {
-            sms_code_input.error = "Wrong code";
-            switchFormState(LoginActivityState.CONFIRMATION)
-        }
+        loginRepresenter.processConfirmRequest(phoneStr, smsCodeText)
     }
 
     /**
      * Changes the current visible form
      */
-    private fun switchFormState(activityState: LoginActivityState) {
+    private fun switchFormState(activityState: LoginRepresenter.LoginActivityState) {
         val shortAnimTime = resources.getInteger(android.R.integer.config_shortAnimTime).toLong()
 
-        val stateToFormMap = arrayListOf<Pair<View, LoginActivityState>>(
-            Pair(login_form, LoginActivityState.LOGIN),
-            Pair(progress, LoginActivityState.LOADER),
-            Pair(confirm_form, LoginActivityState.CONFIRMATION)
+        val stateToFormMap = arrayListOf<Pair<View, LoginRepresenter.LoginActivityState>>(
+            Pair(login_form,
+                LoginRepresenter.LoginActivityState.LOGIN
+            ),
+            Pair(progress, LoginRepresenter.LoginActivityState.LOADER),
+            Pair(confirm_form,
+                LoginRepresenter.LoginActivityState.CONFIRMATION
+            )
         )
 
         for ( (view, mappedState) in stateToFormMap) {
@@ -166,8 +126,12 @@ class LoginActivity : BaseActivityWithCoroutineScope() {
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        loginRepresenter.destroy()
+    }
+
     companion object {
-        val TOKEN_REPLY = "com.example.dmitrykostin.revolut_client";
         val INTENT_KEY_TOKEN = "access_token";
         val INTENT_KEY_USER_ID = "user_id";
         val LAST_ENTERED_PHONE_ID = "android:enteredPhone"

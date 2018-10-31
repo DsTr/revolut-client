@@ -36,6 +36,8 @@ dependencies {
     implementation 'com.github.kittinunf.fuel:fuel-moshi:1.16.0' //for Moshi support
     implementation 'com.github.kittinunf.fuel:fuel-coroutines:1.16.0' //for Moshi support
 
+    // Result framework
+    implementation 'com.github.kittinunf.result:result:1.6.0'
 
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'

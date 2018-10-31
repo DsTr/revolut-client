@@ -1,4 +1,4 @@
-package com.example.dmitrykostin.revolut_client
+package com.example.dmitrykostin.revolut_client.mvp.activity
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
@@ -9,7 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlin.coroutines.CoroutineContext
 
-abstract class BaseActivityWithCoroutineScope : AppCompatActivity(), CoroutineScope {
+abstract class BaseActivity : AppCompatActivity(), CoroutineScope {
     lateinit var job: Job
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.Main + job

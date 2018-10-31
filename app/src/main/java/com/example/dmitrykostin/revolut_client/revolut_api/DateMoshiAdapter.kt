@@ -1,8 +1,6 @@
-package com.example.dmitrykostin.revolut_client.Revolut
+package com.example.dmitrykostin.revolut_client.revolut_api
 
-import com.squareup.moshi.JsonAdapter
 import java.util.*
-import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.FromJson
 import com.squareup.moshi.ToJson
 

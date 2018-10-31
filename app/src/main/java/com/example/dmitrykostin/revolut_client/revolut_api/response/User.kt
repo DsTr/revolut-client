@@ -1,9 +1,9 @@
-package com.example.dmitrykostin.revolut_client.Revolut.response
+package com.example.dmitrykostin.revolut_client.revolut_api.response
 
 import com.squareup.moshi.Json
 
 data class User(
-    @Json(name = "id") val id: String?,
+    @Json(name = "id") val id: String,
     @Json(name = "createdDate") val createdDate: Long?,
     @Json(name = "address") val address: Address?,
     @Json(name = "birthDate") val birthDate: List<Int?>?,

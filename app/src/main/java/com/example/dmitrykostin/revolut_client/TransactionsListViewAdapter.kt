@@ -1,12 +1,10 @@
 package com.example.dmitrykostin.revolut_client
 
-import android.support.constraint.ConstraintLayout
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.widget.LinearLayout
 import android.widget.TextView
-import com.example.dmitrykostin.revolut_client.Revolut.response.Transaction
+import com.example.dmitrykostin.revolut_client.revolut_api.response.Transaction
 import java.text.DateFormat
 import java.util.*
 
