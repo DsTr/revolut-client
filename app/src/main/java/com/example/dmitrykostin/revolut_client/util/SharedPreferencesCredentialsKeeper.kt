@@ -26,4 +26,13 @@ class SharedPreferencesCredentialsKeeper(val sharedPreferences: SharedPreference
             apply()
         }
     }
+
+    override fun clearCredentials(): Boolean {
+        with(sharedPreferences.edit()) {
+            remove(user_id_key)
+            remove(token_key)
+            apply()
+        }
+        return true
+    }
 }

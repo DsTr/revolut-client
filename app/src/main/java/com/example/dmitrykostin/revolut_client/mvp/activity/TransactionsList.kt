@@ -19,6 +19,10 @@ import com.example.dmitrykostin.revolut_client.TransactionsListViewAdapter
 import com.example.dmitrykostin.revolut_client.mvp.model.RevolutTransactionsListModel
 import com.example.dmitrykostin.revolut_client.mvp.representer.TransactionsListRepresenter
 import com.example.dmitrykostin.revolut_client.util.SharedPreferencesCredentialsKeeper
+import android.R.menu
+import android.view.Menu
+import android.view.MenuItem
+
 
 class TransactionsList : BaseActivity() {
     companion object {
@@ -57,6 +61,8 @@ class TransactionsList : BaseActivity() {
             if (it == TransactionsListRepresenter.ReasonToLoginUser.EXPIRED_TOKEN) {
                 Toast.makeText(baseContext, "Wrong credentials, authorize again", Toast.LENGTH_SHORT).show();
             }
+            transactionListDataset.clear()
+            viewAdapter.notifyDataSetChanged()
             startLoginActivity()
         }
 
@@ -65,6 +71,20 @@ class TransactionsList : BaseActivity() {
         }
 
         transactionsListRepresenter.load()
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        val id = item.getItemId()
+
+        return if (id == R.id.action_logout) {
+            transactionsListRepresenter.logOutUser()
+            true
+        } else super.onOptionsItemSelected(item)
+    }
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        menuInflater.inflate(R.menu.main_menu, menu)
+        return true
     }
 
     private fun getSharedPreferences(): SharedPreferences {

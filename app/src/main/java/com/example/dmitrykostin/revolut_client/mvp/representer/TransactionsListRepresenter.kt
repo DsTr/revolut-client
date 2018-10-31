@@ -11,7 +11,8 @@ import kotlinx.coroutines.launch
 class TransactionsListRepresenter(val credentialsKeeper: CredentialsKeeper, val transactionsListModel: TransactionsListModel) : BaseRepresenter() {
     enum class ReasonToLoginUser {
         FIRST_LAUNCH,
-        EXPIRED_TOKEN
+        EXPIRED_TOKEN,
+        SIGNOUT
     }
 
     var newTransactionsToDisplayCb : (Collection<Transaction>) -> Unit = {}
@@ -20,6 +21,11 @@ class TransactionsListRepresenter(val credentialsKeeper: CredentialsKeeper, val 
 
     fun load() {
         loadTransactions()
+    }
+
+    fun logOutUser() {
+        credentialsKeeper.clearCredentials()
+        needNewUserCredentialsCb(ReasonToLoginUser.SIGNOUT)
     }
 
     fun newCredentialsRetrievedFromUser(userId: String, token: String) {
