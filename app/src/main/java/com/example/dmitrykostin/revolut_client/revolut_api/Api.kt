@@ -79,7 +79,7 @@ class Api {
         //https://api.revolut.com/user/current/transactions?from=0
         ///user/current/transactions/last?to=TS
         //, "to" to (System.currentTimeMillis()/1000)
-        val params = listOf("from" to 0 )
+        val params = listOf("from" to 0, "count" to 10 )
         val (_, _, result) = fuelManager.request(
             Method.GET,
             "/user/current/transactions",

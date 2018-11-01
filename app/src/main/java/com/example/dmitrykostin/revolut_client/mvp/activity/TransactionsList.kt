@@ -13,24 +13,20 @@ import kotlinx.android.synthetic.main.activity_transactions_list.*
 import kotlinx.android.synthetic.main.content_transactions_list.*
 import android.support.v7.widget.DividerItemDecoration
 import android.widget.Toast
-import com.example.dmitrykostin.revolut_client.CredentialsHolder
 import com.example.dmitrykostin.revolut_client.R
 import com.example.dmitrykostin.revolut_client.TransactionsListViewAdapter
 import com.example.dmitrykostin.revolut_client.mvp.model.RevolutTransactionsListModel
 import com.example.dmitrykostin.revolut_client.mvp.representer.TransactionsListRepresenter
 import com.example.dmitrykostin.revolut_client.util.SharedPreferencesCredentialsKeeper
-import android.R.menu
 import android.view.Menu
 import android.view.MenuItem
-
 
 class TransactionsList : BaseActivity() {
     companion object {
         val LOGIN_REQUEST = 1;
     }
 
-    private lateinit var viewAdapter: RecyclerView.Adapter<*>
-    private lateinit var viewManager: RecyclerView.LayoutManager
+    private lateinit var viewAdapter: TransactionsListViewAdapter
     private val transactionListDataset: ArrayList<Transaction> = ArrayList(0)
 
     private lateinit var transactionsListRepresenter: TransactionsListRepresenter;
@@ -40,10 +36,9 @@ class TransactionsList : BaseActivity() {
         setContentView(R.layout.activity_transactions_list)
         setSupportActionBar(toolbar)
 
-        viewManager = LinearLayoutManager(this)
         viewAdapter = TransactionsListViewAdapter(transactionListDataset)
 
-        transaction_list.layoutManager = viewManager
+        transaction_list.layoutManager = LinearLayoutManager(this)
         transaction_list.adapter = viewAdapter
         transaction_list.addItemDecoration(DividerItemDecoration(this, LinearLayoutManager.VERTICAL))
         transaction_list.setHasFixedSize(true)
@@ -70,6 +65,11 @@ class TransactionsList : BaseActivity() {
             Toast.makeText(baseContext, "Network failure, try again later", Toast.LENGTH_SHORT).show();
         }
 
+        transactionsListRepresenter.switchLoaderStateCb = {
+            viewAdapter.loadingState = it
+            viewAdapter.notifyDataSetChanged()
+        }
+
         transactionsListRepresenter.load()
     }
 
@@ -81,6 +81,7 @@ class TransactionsList : BaseActivity() {
             true
         } else super.onOptionsItemSelected(item)
     }
+
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.main_menu, menu)

@@ -18,6 +18,7 @@ class TransactionsListRepresenter(val credentialsKeeper: CredentialsKeeper, val 
     var newTransactionsToDisplayCb : (Collection<Transaction>) -> Unit = {}
     var needNewUserCredentialsCb : (ReasonToLoginUser) -> Unit = {}
     var networkFailureCb : () -> Unit = {}
+    var switchLoaderStateCb : (Boolean) -> Unit = {}
 
     fun load() {
         loadTransactions()
@@ -37,6 +38,7 @@ class TransactionsListRepresenter(val credentialsKeeper: CredentialsKeeper, val 
     private fun loadTransactions() = launch {
         val credentialsHolder = credentialsKeeper.getCredentialsHolder()
         if (credentialsHolder != null) {
+            switchLoaderStateCb(true)
             val (transactionList, err) = async(Dispatchers.IO) {
                 transactionsListModel.loadMore(credentialsHolder)
             }.await()
@@ -54,5 +56,6 @@ class TransactionsListRepresenter(val credentialsKeeper: CredentialsKeeper, val 
             // Did not have token before
             needNewUserCredentialsCb(ReasonToLoginUser.FIRST_LAUNCH)
         }
+        switchLoaderStateCb(false)
     }
 }
