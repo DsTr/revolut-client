@@ -34,6 +34,8 @@ class TransactionsListViewAdapter(private val transactionsDataset: ArrayList<Tra
         val infoView = layout.findViewById<TextView>(R.id.info_text_view)
         val amountView = layout.findViewById<TextView>(R.id.amount)
         val dateView = layout.findViewById<TextView>(R.id.date_view)
+        val additionalInfoView = layout.findViewById<TextView>(R.id.additional_info)
+
 
         override fun updateData(transaction: Transaction?, isLoadingState: Boolean) {
             infoView.text = transaction?.description
@@ -42,6 +44,19 @@ class TransactionsListViewAdapter(private val transactionsDataset: ArrayList<Tra
                 dateView.text = DateFormat.getDateTimeInstance().format(transaction.startedDate)
             } else {
                 dateView.text = ""
+            }
+            val additionalInfoBuilder = StringBuilder()
+            val mcc = transaction?.merchant?.mcc
+            if (null != mcc) {
+                additionalInfoBuilder.append("mcc: ")
+                additionalInfoBuilder.append(mcc)
+            }
+            val additionalInfoText = additionalInfoBuilder.toString()
+            if (additionalInfoText.isEmpty()) {
+                additionalInfoView.visibility = View.GONE
+            } else {
+                additionalInfoView.text = additionalInfoText
+                additionalInfoView.visibility = View.VISIBLE
             }
         }
     }
