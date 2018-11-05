@@ -5,19 +5,17 @@ import android.animation.AnimatorListenerAdapter
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.text.TextUtils
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import com.example.dmitrykostin.revolut_client.R
-import com.example.dmitrykostin.revolut_client.mvp.representer.LoginRepresenter
-import com.example.dmitrykostin.revolut_client.revolut_api.Api
+import com.example.dmitrykostin.revolut_client.mvp.representer.LoginRepresenterInterface
+import com.example.dmitrykostin.revolut_client.mvp.representer.RevolutLoginRepresenter
 
 import kotlinx.android.synthetic.main.activity_login.*
-import kotlinx.coroutines.*
 
-class LoginActivity : BaseActivity() {
+class LoginActivity : BaseActivity(), LoginActivityInterface {
 
-    lateinit var loginRepresenter: LoginRepresenter;
+    lateinit var loginRepresenter: LoginRepresenterInterface;
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,24 +34,30 @@ class LoginActivity : BaseActivity() {
         email_sign_in_button.setOnClickListener { attemptLogin() }
         confirm_sms_button.setOnClickListener { attemptConfirm() }
 
-        loginRepresenter = LoginRepresenter()
-        loginRepresenter.switchViewStateCb = {switchFormState(it)}
-        loginRepresenter.wrongCredentialsCb = {
-            password.error = getString(R.string.error_invalid_password)
-            password.requestFocus()
-        }
-        loginRepresenter.wrongConfirmationNumberCb = {
-            sms_code_input.error = "Wrong code";
-        }
-        loginRepresenter.credentialsReceivedCb = { userId, accessToken ->
-            val result = Intent()
-            result.putExtra(LoginActivity.INTENT_KEY_USER_ID, userId)
-            result.putExtra(LoginActivity.INTENT_KEY_TOKEN, accessToken)
-            setResult(Activity.RESULT_OK, result)
-            finish()
-        }
+        loginRepresenter = createConcreteLoginRepresenter()
 
-        cancel_confirm_sms_button.setOnClickListener { loginRepresenter.cancelConfirmation() }
+        cancel_confirm_sms_button.setOnClickListener { loginRepresenter.userCanceledConfirmation() }
+    }
+
+    private fun createConcreteLoginRepresenter() : LoginRepresenterInterface {
+        return RevolutLoginRepresenter(this);
+    }
+
+    override fun gotWrongCredentials() {
+        password.error = getString(R.string.error_invalid_password)
+        password.requestFocus()
+    }
+
+    override fun gotWrongConfirmationNumber() {
+        sms_code_input.error = "Wrong code";
+    }
+
+    override fun gotUserCredentials(userId: String, accessToken: String) {
+        val result = Intent()
+        result.putExtra(LoginActivity.INTENT_KEY_USER_ID, userId)
+        result.putExtra(LoginActivity.INTENT_KEY_TOKEN, accessToken)
+        setResult(Activity.RESULT_OK, result)
+        finish()
     }
 
     private fun attemptLogin() {
@@ -81,27 +85,27 @@ class LoginActivity : BaseActivity() {
     /**
      * Changes the current visible form
      */
-    private fun switchFormState(activityState: LoginRepresenter.LoginActivityState) {
+    override fun switchViewStateCb(loginActivityState: LoginRepresenterInterface.LoginActivityState) {
         val shortAnimTime = resources.getInteger(android.R.integer.config_shortAnimTime).toLong()
 
-        val stateToFormMap = arrayListOf<Pair<View, LoginRepresenter.LoginActivityState>>(
+        val stateToFormMap = arrayListOf<Pair<View, LoginRepresenterInterface.LoginActivityState>>(
             Pair(login_form,
-                LoginRepresenter.LoginActivityState.LOGIN
+                LoginRepresenterInterface.LoginActivityState.LOGIN
             ),
-            Pair(progress, LoginRepresenter.LoginActivityState.LOADER),
+            Pair(progress, LoginRepresenterInterface.LoginActivityState.LOADER),
             Pair(confirm_form,
-                LoginRepresenter.LoginActivityState.CONFIRMATION
+                LoginRepresenterInterface.LoginActivityState.CONFIRMATION
             )
         )
 
         for ( (view, mappedState) in stateToFormMap) {
-            view.visibility = if (activityState == mappedState) View.VISIBLE else View.GONE
+            view.visibility = if (loginActivityState == mappedState) View.VISIBLE else View.GONE
             view.animate()
                 .setDuration(shortAnimTime)
-                .alpha((if (activityState == mappedState) 1 else 0).toFloat())
+                .alpha((if (loginActivityState == mappedState) 1 else 0).toFloat())
                 .setListener(object : AnimatorListenerAdapter() {
                     override fun onAnimationEnd(animation: Animator) {
-                        view.visibility = if (activityState == mappedState) View.VISIBLE else View.GONE
+                        view.visibility = if (loginActivityState == mappedState) View.VISIBLE else View.GONE
                     }
                 })
         }

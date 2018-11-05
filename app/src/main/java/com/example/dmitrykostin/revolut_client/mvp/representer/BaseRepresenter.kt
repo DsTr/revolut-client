@@ -7,7 +7,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlin.coroutines.CoroutineContext
 
-abstract class BaseRepresenter : CoroutineScope {
+abstract class BaseRepresenter : CoroutineScope, BaseRepresenterInferface {
     private val job by lazy {
         Job()
     }
@@ -15,7 +15,7 @@ abstract class BaseRepresenter : CoroutineScope {
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.Main + job
 
-    fun destroy() {
+    override fun destroy() {
         job.cancel()
     }
 }

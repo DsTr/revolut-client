@@ -6,7 +6,6 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
 import com.example.dmitrykostin.revolut_client.revolut_api.response.Transaction
 
 import kotlinx.android.synthetic.main.activity_transactions_list.*
@@ -16,12 +15,13 @@ import android.widget.Toast
 import com.example.dmitrykostin.revolut_client.R
 import com.example.dmitrykostin.revolut_client.TransactionsListViewAdapter
 import com.example.dmitrykostin.revolut_client.mvp.model.RevolutTransactionsListModel
-import com.example.dmitrykostin.revolut_client.mvp.representer.TransactionsListRepresenter
+import com.example.dmitrykostin.revolut_client.mvp.representer.RevolutTransactionsListRepresenter
 import com.example.dmitrykostin.revolut_client.util.SharedPreferencesCredentialsKeeper
 import android.view.Menu
 import android.view.MenuItem
+import com.example.dmitrykostin.revolut_client.mvp.representer.TransactionListRepresenterInterface
 
-class TransactionsList : BaseActivity() {
+class TransactionsList : BaseActivity(), TransactionsListActivityInterface {
     companion object {
         val LOGIN_REQUEST = 1;
     }
@@ -29,7 +29,7 @@ class TransactionsList : BaseActivity() {
     private lateinit var viewAdapter: TransactionsListViewAdapter
     private val transactionListDataset: ArrayList<Transaction> = ArrayList(0)
 
-    private lateinit var transactionsListRepresenter: TransactionsListRepresenter;
+    private lateinit var transactionsListRepresenter: TransactionListRepresenterInterface;
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,34 +43,36 @@ class TransactionsList : BaseActivity() {
         transaction_list.addItemDecoration(DividerItemDecoration(this, LinearLayoutManager.VERTICAL))
         transaction_list.setHasFixedSize(true)
 
-        val sharedPreferencesCredentialsKeeper = SharedPreferencesCredentialsKeeper(getSharedPreferences())
-
-        transactionsListRepresenter = TransactionsListRepresenter(sharedPreferencesCredentialsKeeper, RevolutTransactionsListModel())
-
-        transactionsListRepresenter.newTransactionsToDisplayCb = {
-            transactionListDataset.addAll(it)
-            viewAdapter.notifyDataSetChanged()
-        }
-
-        transactionsListRepresenter.needNewUserCredentialsCb = {
-            if (it == TransactionsListRepresenter.ReasonToLoginUser.EXPIRED_TOKEN) {
-                Toast.makeText(baseContext, "Wrong credentials, authorize again", Toast.LENGTH_SHORT).show();
-            }
-            transactionListDataset.clear()
-            viewAdapter.notifyDataSetChanged()
-            startLoginActivity()
-        }
-
-        transactionsListRepresenter.networkFailureCb = {
-            Toast.makeText(baseContext, "Network failure, try again later", Toast.LENGTH_SHORT).show();
-        }
-
-        transactionsListRepresenter.switchLoaderStateCb = {
-            viewAdapter.loadingState = it
-            viewAdapter.notifyDataSetChanged()
-        }
-
+        transactionsListRepresenter = createConcreteTransactionListRepresenter()
         transactionsListRepresenter.load()
+    }
+
+    private fun createConcreteTransactionListRepresenter() : TransactionListRepresenterInterface {
+        val sharedPreferencesCredentialsKeeper = SharedPreferencesCredentialsKeeper(getSharedPreferences())
+        return RevolutTransactionsListRepresenter(sharedPreferencesCredentialsKeeper, RevolutTransactionsListModel(), this)
+    }
+
+    override fun gotNewTransactionsToDisplay(newTransactionsList: Collection<Transaction>) {
+        transactionListDataset.addAll(newTransactionsList)
+        viewAdapter.notifyDataSetChanged()
+    }
+
+    override fun doNewUserCredentialsRequest(reasonToRequest: TransactionListRepresenterInterface.ReasonToLoginUser) {
+        if (reasonToRequest == TransactionListRepresenterInterface.ReasonToLoginUser.EXPIRED_TOKEN) {
+            Toast.makeText(baseContext, "Wrong credentials, authorize again", Toast.LENGTH_SHORT).show();
+        }
+        transactionListDataset.clear()
+        viewAdapter.notifyDataSetChanged()
+        startLoginActivity()
+    }
+
+    override fun gotNetworkFailure() {
+        Toast.makeText(baseContext, "Network failure, try again later", Toast.LENGTH_LONG).show();
+    }
+
+    override fun doSwitchLoaderState(loadingState: Boolean) {
+        viewAdapter.loadingState = loadingState
+        viewAdapter.notifyDataSetChanged()
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
