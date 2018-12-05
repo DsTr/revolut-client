@@ -9,7 +9,7 @@ import com.example.dmitrykostin.revolut_client.revolut_api.response.Transaction
 import java.text.DateFormat
 import java.util.*
 
-class TransactionsListViewAdapter(private val transactionsDataset: ArrayList<Transaction>) : RecyclerView.Adapter<TransactionsListViewAdapter.BasicLayoutViewHolder>() {
+class TransactionsListViewAdapter(var transactionsDataset: List<Transaction>) : RecyclerView.Adapter<TransactionsListViewAdapter.BasicLayoutViewHolder>() {
     companion object {
         val VIEW_TYPE_TRANSACTION = 1
         val VIEW_TYPE_LOADER = 2
@@ -35,7 +35,6 @@ class TransactionsListViewAdapter(private val transactionsDataset: ArrayList<Tra
         val amountView = layout.findViewById<TextView>(R.id.amount)
         val dateView = layout.findViewById<TextView>(R.id.date_view)
         val additionalInfoView = layout.findViewById<TextView>(R.id.additional_info)
-
 
         override fun updateData(transaction: Transaction?, isLoadingState: Boolean) {
             infoView.text = transaction?.description

@@ -36,24 +36,35 @@ class TransactionsList : BaseActivity(), TransactionsListActivityInterface {
         setContentView(R.layout.activity_transactions_list)
         setSupportActionBar(toolbar)
 
-        viewAdapter = TransactionsListViewAdapter(transactionListDataset)
+        prepareTransactionListView()
+        prepareRepresenter()
+    }
 
+    private fun prepareTransactionListView() {
+        viewAdapter = TransactionsListViewAdapter(transactionListDataset)
         transaction_list.layoutManager = LinearLayoutManager(this)
         transaction_list.adapter = viewAdapter
         transaction_list.addItemDecoration(DividerItemDecoration(this, LinearLayoutManager.VERTICAL))
         transaction_list.setHasFixedSize(true)
+    }
 
-        transactionsListRepresenter = createConcreteTransactionListRepresenter()
-        transactionsListRepresenter.load()
+    private fun prepareRepresenter() {
+        if (null != lastCustomNonConfigurationInstance) {
+            transactionsListRepresenter = lastCustomNonConfigurationInstance as TransactionListRepresenterInterface
+        } else {
+            transactionsListRepresenter = createConcreteTransactionListRepresenter()
+        }
+        transactionsListRepresenter.attachView(this)
+        transactionsListRepresenter.firstLoad()
     }
 
     private fun createConcreteTransactionListRepresenter() : TransactionListRepresenterInterface {
         val sharedPreferencesCredentialsKeeper = SharedPreferencesCredentialsKeeper(getSharedPreferences())
-        return RevolutTransactionsListRepresenter(sharedPreferencesCredentialsKeeper, RevolutTransactionsListModel(), this)
+        return RevolutTransactionsListRepresenter(sharedPreferencesCredentialsKeeper, RevolutTransactionsListModel())
     }
 
-    override fun gotNewTransactionsToDisplay(newTransactionsList: Collection<Transaction>) {
-        transactionListDataset.addAll(newTransactionsList)
+    override fun gotNewDatasetToDisplay(newTransactionsList: List<Transaction>) {
+        viewAdapter.transactionsDataset = newTransactionsList
         viewAdapter.notifyDataSetChanged()
     }
 
@@ -119,6 +130,13 @@ class TransactionsList : BaseActivity(), TransactionsListActivityInterface {
 
     override fun onDestroy() {
         super.onDestroy()
-        transactionsListRepresenter.destroy()
+        if (!this.isChangingConfigurations) {
+            transactionsListRepresenter.destroy()
+        }
+        transactionsListRepresenter.detachView()
+    }
+
+    override fun onRetainCustomNonConfigurationInstance(): Any {
+        return transactionsListRepresenter
     }
 }

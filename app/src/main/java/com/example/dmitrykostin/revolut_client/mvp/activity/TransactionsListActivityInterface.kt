@@ -4,7 +4,7 @@ import com.example.dmitrykostin.revolut_client.mvp.representer.TransactionListRe
 import com.example.dmitrykostin.revolut_client.revolut_api.response.Transaction
 
 interface TransactionsListActivityInterface {
-    fun gotNewTransactionsToDisplay(newTransactionsList: Collection<Transaction>)
+    fun gotNewDatasetToDisplay(newTransactionsList: List<Transaction>)
     fun doNewUserCredentialsRequest(reasonToRequest: TransactionListRepresenterInterface.ReasonToLoginUser)
     fun gotNetworkFailure()
     fun doSwitchLoaderState(loadingState: Boolean)
