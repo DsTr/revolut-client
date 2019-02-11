@@ -1,4 +1,4 @@
-package com.example.dmitrykostin.revolut_client.mvp.representer
+package com.example.dmitrykostin.revolut_client.mvp.presenter
 
 import com.example.dmitrykostin.revolut_client.mvp.activity.LoginActivityInterface
 import com.example.dmitrykostin.revolut_client.revolut_api.Api
@@ -6,29 +6,29 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 
-class RevolutLoginRepresenter(val loginActivity: LoginActivityInterface) : BaseRepresenter(), LoginRepresenterInterface {
+class RevolutLoginPresenter(val loginActivity: LoginActivityInterface) : CoroutinePresenter(), LoginPresenter {
     private val api by lazy {
         Api()
     }
 
     override fun userCanceledConfirmation() {
-        loginActivity.switchViewStateCb(LoginRepresenterInterface.LoginActivityState.LOGIN)
+        loginActivity.switchViewStateCb(LoginPresenter.LoginActivityState.LOGIN)
     }
 
     override fun tryToLogin(phone: String, user_password: String) = launch {
         if (phone.isEmpty() || user_password.isEmpty()) {
             loginActivity.gotWrongCredentials()
         } else {
-            loginActivity.switchViewStateCb(LoginRepresenterInterface.LoginActivityState.LOADER)
+            loginActivity.switchViewStateCb(LoginPresenter.LoginActivityState.LOADER)
 
             val (_, err) = async(Dispatchers.Default) {
                 api.signIn(phone, user_password)
             }.await()
 
             if (err == null) {
-                loginActivity.switchViewStateCb(LoginRepresenterInterface.LoginActivityState.CONFIRMATION)
+                loginActivity.switchViewStateCb(LoginPresenter.LoginActivityState.CONFIRMATION)
             } else {
-                loginActivity.switchViewStateCb(LoginRepresenterInterface.LoginActivityState.LOGIN)
+                loginActivity.switchViewStateCb(LoginPresenter.LoginActivityState.LOGIN)
                 loginActivity.gotWrongCredentials()
             }
         }
@@ -36,11 +36,11 @@ class RevolutLoginRepresenter(val loginActivity: LoginActivityInterface) : BaseR
 
     override fun processConfirmRequest(phone: String, code: String) = launch {
         if (phone.isEmpty()) {
-            loginActivity.switchViewStateCb(LoginRepresenterInterface.LoginActivityState.LOGIN)
+            loginActivity.switchViewStateCb(LoginPresenter.LoginActivityState.LOGIN)
         } else if (code.isEmpty()) {
             loginActivity.gotWrongConfirmationNumber()
         } else {
-            loginActivity.switchViewStateCb(LoginRepresenterInterface.LoginActivityState.LOADER)
+            loginActivity.switchViewStateCb(LoginPresenter.LoginActivityState.LOADER)
             val (confirmResponse, err) = async(Dispatchers.Default) {
                 api.confirm(phone, code)
             }.await()
@@ -48,7 +48,7 @@ class RevolutLoginRepresenter(val loginActivity: LoginActivityInterface) : BaseR
                 loginActivity.gotUserCredentials(confirmResponse.user.id, confirmResponse.accessToken)
             } else {
                 loginActivity.gotWrongConfirmationNumber()
-                loginActivity.switchViewStateCb(LoginRepresenterInterface.LoginActivityState.CONFIRMATION)
+                loginActivity.switchViewStateCb(LoginPresenter.LoginActivityState.CONFIRMATION)
             }
         }
     }

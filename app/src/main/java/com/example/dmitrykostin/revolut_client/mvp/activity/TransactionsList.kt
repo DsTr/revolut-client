@@ -13,13 +13,13 @@ import kotlinx.android.synthetic.main.content_transactions_list.*
 import android.support.v7.widget.DividerItemDecoration
 import android.widget.Toast
 import com.example.dmitrykostin.revolut_client.R
-import com.example.dmitrykostin.revolut_client.TransactionsListViewAdapter
+import com.example.dmitrykostin.revolut_client.mvp.adapters.TransactionsListViewAdapter
 import com.example.dmitrykostin.revolut_client.mvp.model.RevolutTransactionsListModel
-import com.example.dmitrykostin.revolut_client.mvp.representer.RevolutTransactionsListRepresenter
-import com.example.dmitrykostin.revolut_client.util.SharedPreferencesCredentialsKeeper
+import com.example.dmitrykostin.revolut_client.mvp.presenter.RevolutTransactionsListPresenter
+import com.example.dmitrykostin.revolut_client.util.SharedPreferencesCredentialsStorage
 import android.view.Menu
 import android.view.MenuItem
-import com.example.dmitrykostin.revolut_client.mvp.representer.TransactionListRepresenterInterface
+import com.example.dmitrykostin.revolut_client.mvp.presenter.TransactionListPresenterInterface
 
 class TransactionsList : BaseActivity(), TransactionsListActivityInterface {
     companion object {
@@ -29,7 +29,7 @@ class TransactionsList : BaseActivity(), TransactionsListActivityInterface {
     private lateinit var viewAdapter: TransactionsListViewAdapter
     private val transactionListDataset: ArrayList<Transaction> = ArrayList(0)
 
-    private lateinit var transactionsListRepresenter: TransactionListRepresenterInterface;
+    private lateinit var transactionsListPresenter: TransactionListPresenterInterface;
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,7 +41,9 @@ class TransactionsList : BaseActivity(), TransactionsListActivityInterface {
     }
 
     private fun prepareTransactionListView() {
-        viewAdapter = TransactionsListViewAdapter(transactionListDataset)
+        viewAdapter =
+                TransactionsListViewAdapter(transactionListDataset)
+        viewAdapter.loadMoreButtonClickCb = {transactionsListPresenter.loadMoreClick()}
         transaction_list.layoutManager = LinearLayoutManager(this)
         transaction_list.adapter = viewAdapter
         transaction_list.addItemDecoration(DividerItemDecoration(this, LinearLayoutManager.VERTICAL))
@@ -50,17 +52,17 @@ class TransactionsList : BaseActivity(), TransactionsListActivityInterface {
 
     private fun prepareRepresenter() {
         if (null != lastCustomNonConfigurationInstance) {
-            transactionsListRepresenter = lastCustomNonConfigurationInstance as TransactionListRepresenterInterface
+            transactionsListPresenter = lastCustomNonConfigurationInstance as TransactionListPresenterInterface
         } else {
-            transactionsListRepresenter = createConcreteTransactionListRepresenter()
+            transactionsListPresenter = createConcreteTransactionListRepresenter()
         }
-        transactionsListRepresenter.attachView(this)
-        transactionsListRepresenter.firstLoad()
+        transactionsListPresenter.attachView(this)
+        transactionsListPresenter.activityLoaded()
     }
 
-    private fun createConcreteTransactionListRepresenter() : TransactionListRepresenterInterface {
-        val sharedPreferencesCredentialsKeeper = SharedPreferencesCredentialsKeeper(getSharedPreferences())
-        return RevolutTransactionsListRepresenter(sharedPreferencesCredentialsKeeper, RevolutTransactionsListModel())
+    private fun createConcreteTransactionListRepresenter() : TransactionListPresenterInterface {
+        val sharedPreferencesCredentialsKeeper = SharedPreferencesCredentialsStorage(getSharedPreferences())
+        return RevolutTransactionsListPresenter(sharedPreferencesCredentialsKeeper, RevolutTransactionsListModel())
     }
 
     override fun gotNewDatasetToDisplay(newTransactionsList: List<Transaction>) {
@@ -68,8 +70,8 @@ class TransactionsList : BaseActivity(), TransactionsListActivityInterface {
         viewAdapter.notifyDataSetChanged()
     }
 
-    override fun doNewUserCredentialsRequest(reasonToRequest: TransactionListRepresenterInterface.ReasonToLoginUser) {
-        if (reasonToRequest == TransactionListRepresenterInterface.ReasonToLoginUser.EXPIRED_TOKEN) {
+    override fun doNewUserCredentialsRequest(reasonToRequest: TransactionListPresenterInterface.ReasonToLoginUser) {
+        if (reasonToRequest == TransactionListPresenterInterface.ReasonToLoginUser.EXPIRED_TOKEN) {
             Toast.makeText(baseContext, "Wrong credentials, authorize again", Toast.LENGTH_SHORT).show();
         }
         transactionListDataset.clear()
@@ -90,7 +92,7 @@ class TransactionsList : BaseActivity(), TransactionsListActivityInterface {
         val id = item.getItemId()
 
         return if (id == R.id.action_logout) {
-            transactionsListRepresenter.logOutUser()
+            transactionsListPresenter.logOutClick()
             true
         } else super.onOptionsItemSelected(item)
     }
@@ -122,7 +124,7 @@ class TransactionsList : BaseActivity(), TransactionsListActivityInterface {
                 val token = data?.getStringExtra(LoginActivity.INTENT_KEY_TOKEN);
 
                 if (null != token && userId != null) {
-                    transactionsListRepresenter.newCredentialsRetrievedFromUser(userId, token)
+                    transactionsListPresenter.newCredentialsRetrievedFromUser(userId, token)
                 }
             }
         }
@@ -131,12 +133,12 @@ class TransactionsList : BaseActivity(), TransactionsListActivityInterface {
     override fun onDestroy() {
         super.onDestroy()
         if (!this.isChangingConfigurations) {
-            transactionsListRepresenter.destroy()
+            transactionsListPresenter.destroy()
         }
-        transactionsListRepresenter.detachView()
+        transactionsListPresenter.detachView()
     }
 
     override fun onRetainCustomNonConfigurationInstance(): Any {
-        return transactionsListRepresenter
+        return transactionsListPresenter
     }
 }

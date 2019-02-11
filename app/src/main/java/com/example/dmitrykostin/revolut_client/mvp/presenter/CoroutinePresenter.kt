@@ -1,13 +1,11 @@
-package com.example.dmitrykostin.revolut_client.mvp.representer
+package com.example.dmitrykostin.revolut_client.mvp.presenter
 
-import android.os.Bundle
-import com.example.dmitrykostin.revolut_client.revolut_api.Api
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlin.coroutines.CoroutineContext
 
-abstract class BaseRepresenter : CoroutineScope, BaseRepresenterInferface {
+abstract class CoroutinePresenter : CoroutineScope, BasePresenter {
     private val job by lazy {
         Job()
     }

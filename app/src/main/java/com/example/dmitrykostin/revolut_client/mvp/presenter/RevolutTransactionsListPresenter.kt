@@ -1,16 +1,16 @@
-package com.example.dmitrykostin.revolut_client.mvp.representer
+package com.example.dmitrykostin.revolut_client.mvp.presenter
 
-import com.example.dmitrykostin.revolut_client.CredentialsHolder
+import com.example.dmitrykostin.revolut_client.revolut_api.Credentials
 import com.example.dmitrykostin.revolut_client.mvp.activity.TransactionsListActivityInterface
 import com.example.dmitrykostin.revolut_client.mvp.model.TransactionsListModel
 import com.example.dmitrykostin.revolut_client.revolut_api.response.Transaction
-import com.example.dmitrykostin.revolut_client.util.CredentialsKeeper
+import com.example.dmitrykostin.revolut_client.util.CredentialsStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
 
-class RevolutTransactionsListRepresenter(val credentialsKeeper: CredentialsKeeper, val transactionsListModel: TransactionsListModel) : BaseRepresenter(), TransactionListRepresenterInterface {
+class RevolutTransactionsListPresenter(val credentialsKeeper: CredentialsStorage, val transactionsListModel: TransactionsListModel) : CoroutinePresenter(), TransactionListPresenterInterface {
 
     var transactionsListActivity: TransactionsListActivityInterface? = null
     private val transactionsToDisplay: ArrayList<Transaction> = ArrayList(0)
@@ -24,7 +24,7 @@ class RevolutTransactionsListRepresenter(val credentialsKeeper: CredentialsKeepe
         transactionsListActivity = null
     }
 
-    override fun firstLoad() {
+    override fun activityLoaded() {
         if (!transactionsToDisplay.isEmpty()) {
             transactionsListActivity?.gotNewDatasetToDisplay(transactionsToDisplay)
         } else if(loadingInProgress.get()) {
@@ -34,13 +34,21 @@ class RevolutTransactionsListRepresenter(val credentialsKeeper: CredentialsKeepe
         }
     }
 
-    override fun logOutUser() {
+    override fun loadMoreClick() {
+        if(loadingInProgress.get()) {
+            transactionsListActivity?.doSwitchLoaderState(true)
+        } else {
+            loadTransactionsFromApi()
+        }
+    }
+
+    override fun logOutClick() {
         credentialsKeeper.clearCredentials()
-        transactionsListActivity?.doNewUserCredentialsRequest(TransactionListRepresenterInterface.ReasonToLoginUser.SIGNOUT)
+        transactionsListActivity?.doNewUserCredentialsRequest(TransactionListPresenterInterface.ReasonToLoginUser.SIGNOUT)
     }
 
     override fun newCredentialsRetrievedFromUser(userId: String, token: String) {
-        val credentialsHolder = CredentialsHolder(userId, token)
+        val credentialsHolder = Credentials(userId, token)
         credentialsKeeper.saveCredentialsHolder(credentialsHolder)
         loadTransactionsFromApi()
     }
@@ -65,14 +73,14 @@ class RevolutTransactionsListRepresenter(val credentialsKeeper: CredentialsKeepe
                 transactionsListActivity?.gotNewDatasetToDisplay(transactionsToDisplay)
             } else {
                 if (err?.loadErrorType == TransactionsListModel.LoadErrorType.WRONG_CREDENTIALS) {
-                    transactionsListActivity?.doNewUserCredentialsRequest(TransactionListRepresenterInterface.ReasonToLoginUser.EXPIRED_TOKEN)
+                    transactionsListActivity?.doNewUserCredentialsRequest(TransactionListPresenterInterface.ReasonToLoginUser.EXPIRED_TOKEN)
                 } else {
                     transactionsListActivity?.gotNetworkFailure()
                 }
             }
         } else {
             // Did not have token before
-            transactionsListActivity?.doNewUserCredentialsRequest(TransactionListRepresenterInterface.ReasonToLoginUser.FIRST_LAUNCH)
+            transactionsListActivity?.doNewUserCredentialsRequest(TransactionListPresenterInterface.ReasonToLoginUser.FIRST_LAUNCH)
         }
         transactionsListActivity?.doSwitchLoaderState(false)
     }

@@ -8,14 +8,14 @@ import android.os.Bundle
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import com.example.dmitrykostin.revolut_client.R
-import com.example.dmitrykostin.revolut_client.mvp.representer.LoginRepresenterInterface
-import com.example.dmitrykostin.revolut_client.mvp.representer.RevolutLoginRepresenter
+import com.example.dmitrykostin.revolut_client.mvp.presenter.LoginPresenter
+import com.example.dmitrykostin.revolut_client.mvp.presenter.RevolutLoginPresenter
 
 import kotlinx.android.synthetic.main.activity_login.*
 
 class LoginActivity : BaseActivity(), LoginActivityInterface {
 
-    lateinit var loginRepresenter: LoginRepresenterInterface;
+    lateinit var loginRepresenter: LoginPresenter;
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,8 +39,8 @@ class LoginActivity : BaseActivity(), LoginActivityInterface {
         cancel_confirm_sms_button.setOnClickListener { loginRepresenter.userCanceledConfirmation() }
     }
 
-    private fun createConcreteLoginRepresenter() : LoginRepresenterInterface {
-        return RevolutLoginRepresenter(this);
+    private fun createConcreteLoginRepresenter() : LoginPresenter {
+        return RevolutLoginPresenter(this);
     }
 
     override fun gotWrongCredentials() {
@@ -85,16 +85,16 @@ class LoginActivity : BaseActivity(), LoginActivityInterface {
     /**
      * Changes the current visible form
      */
-    override fun switchViewStateCb(loginActivityState: LoginRepresenterInterface.LoginActivityState) {
+    override fun switchViewStateCb(loginActivityState: LoginPresenter.LoginActivityState) {
         val shortAnimTime = resources.getInteger(android.R.integer.config_shortAnimTime).toLong()
 
-        val stateToFormMap = arrayListOf<Pair<View, LoginRepresenterInterface.LoginActivityState>>(
+        val stateToFormMap = arrayListOf<Pair<View, LoginPresenter.LoginActivityState>>(
             Pair(login_form,
-                LoginRepresenterInterface.LoginActivityState.LOGIN
+                LoginPresenter.LoginActivityState.LOGIN
             ),
-            Pair(progress, LoginRepresenterInterface.LoginActivityState.LOADER),
+            Pair(progress, LoginPresenter.LoginActivityState.LOADER),
             Pair(confirm_form,
-                LoginRepresenterInterface.LoginActivityState.CONFIRMATION
+                LoginPresenter.LoginActivityState.CONFIRMATION
             )
         )
 

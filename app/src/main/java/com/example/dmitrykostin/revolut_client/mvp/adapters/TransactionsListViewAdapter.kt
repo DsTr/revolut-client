@@ -1,13 +1,13 @@
-package com.example.dmitrykostin.revolut_client
+package com.example.dmitrykostin.revolut_client.mvp.adapters
 
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import com.example.dmitrykostin.revolut_client.R
 import com.example.dmitrykostin.revolut_client.revolut_api.response.Transaction
 import java.text.DateFormat
-import java.util.*
 
 class TransactionsListViewAdapter(var transactionsDataset: List<Transaction>) : RecyclerView.Adapter<TransactionsListViewAdapter.BasicLayoutViewHolder>() {
     companion object {
@@ -16,6 +16,7 @@ class TransactionsListViewAdapter(var transactionsDataset: List<Transaction>) : 
     }
 
     var loadingState = false
+    var loadMoreButtonClickCb: (() -> Unit)? = null
 
     // Base ViewHodel class and for loader
     abstract class BasicLayoutViewHolder(layout: ViewGroup) : RecyclerView.ViewHolder(layout) {
@@ -24,9 +25,13 @@ class TransactionsListViewAdapter(var transactionsDataset: List<Transaction>) : 
 
     open class LoaderViewHolder(layout: ViewGroup) : BasicLayoutViewHolder(layout) {
         val loaderView = layout.findViewById<View>(R.id.loader_list_item_loader)
+        val loadMoreView = layout.findViewById<View>(R.id.load_more_button)
+        var loadMoreButtonClickCb: (() -> Unit)? = null
 
         override fun updateData(transaction: Transaction?, isLoadingState: Boolean) {
             loaderView.visibility = if (isLoadingState) View.VISIBLE else View.GONE
+            loadMoreView.visibility = if (isLoadingState) View.GONE else View.VISIBLE
+            loadMoreView.setOnClickListener({ loadMoreButtonClickCb?.invoke() })
         }
     }
 
@@ -61,15 +66,20 @@ class TransactionsListViewAdapter(var transactionsDataset: List<Transaction>) : 
     }
 
     override fun onCreateViewHolder(parent: ViewGroup,
-                                    viewType: Int): TransactionsListViewAdapter.BasicLayoutViewHolder {
+                                    viewType: Int): BasicLayoutViewHolder {
         if (viewType == VIEW_TYPE_TRANSACTION) {
             val layout = LayoutInflater.from(parent.context)
                 .inflate(R.layout.transaction_list_item, parent, false) as ViewGroup
-            return TransactionViewHolder(layout)
+            return TransactionViewHolder(
+                layout
+            )
         }
         val layout = LayoutInflater.from(parent.context)
             .inflate(R.layout.loader_list_item, parent, false) as ViewGroup
-        return LoaderViewHolder(layout)
+        val loaderViewHolder =
+            LoaderViewHolder(layout)
+        loaderViewHolder.loadMoreButtonClickCb = loadMoreButtonClickCb
+        return loaderViewHolder
     }
 
     override fun getItemViewType(position: Int): Int {

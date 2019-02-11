@@ -1,9 +1,8 @@
-package com.example.dmitrykostin.revolut_client.mvp.representer
+package com.example.dmitrykostin.revolut_client.mvp.presenter
 
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 
-interface LoginRepresenterInterface: BaseRepresenterInferface {
+interface LoginPresenter: BasePresenter {
     enum class LoginActivityState {
         LOGIN,
         LOADER,
