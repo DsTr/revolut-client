@@ -1,54 +1,54 @@
 package com.example.dmitrykostin.revolut_client.mvp.presenter
 
-import com.example.dmitrykostin.revolut_client.mvp.activity.LoginActivityInterface
+import com.example.dmitrykostin.revolut_client.mvp.activity.LoginView
 import com.example.dmitrykostin.revolut_client.revolut_api.Api
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 
-class RevolutLoginPresenter(val loginActivity: LoginActivityInterface) : CoroutinePresenter(), LoginPresenter {
+class RevolutLoginPresenter(val loginView: LoginView) : CoroutinePresenter(), LoginPresenter {
     private val api by lazy {
         Api()
     }
 
-    override fun userCanceledConfirmation() {
-        loginActivity.switchViewStateCb(LoginPresenter.LoginActivityState.LOGIN)
+    override fun userCancelClicked() {
+        loginView.switchViewStateCb(LoginPresenter.LoginState.LOGIN)
     }
 
-    override fun tryToLogin(phone: String, user_password: String) = launch {
+    override fun userLogInClicked(phone: String, user_password: String) = launch {
         if (phone.isEmpty() || user_password.isEmpty()) {
-            loginActivity.gotWrongCredentials()
+            loginView.showWrongCredentials()
         } else {
-            loginActivity.switchViewStateCb(LoginPresenter.LoginActivityState.LOADER)
+            loginView.switchViewStateCb(LoginPresenter.LoginState.LOADER)
 
             val (_, err) = async(Dispatchers.Default) {
                 api.signIn(phone, user_password)
             }.await()
 
             if (err == null) {
-                loginActivity.switchViewStateCb(LoginPresenter.LoginActivityState.CONFIRMATION)
+                loginView.switchViewStateCb(LoginPresenter.LoginState.CONFIRMATION)
             } else {
-                loginActivity.switchViewStateCb(LoginPresenter.LoginActivityState.LOGIN)
-                loginActivity.gotWrongCredentials()
+                loginView.switchViewStateCb(LoginPresenter.LoginState.LOGIN)
+                loginView.showWrongCredentials()
             }
         }
     }
 
-    override fun processConfirmRequest(phone: String, code: String) = launch {
+    override fun userConfirmSmsClicked(phone: String, code: String) = launch {
         if (phone.isEmpty()) {
-            loginActivity.switchViewStateCb(LoginPresenter.LoginActivityState.LOGIN)
+            loginView.switchViewStateCb(LoginPresenter.LoginState.LOGIN)
         } else if (code.isEmpty()) {
-            loginActivity.gotWrongConfirmationNumber()
+            loginView.showWrongConfirmationNumber()
         } else {
-            loginActivity.switchViewStateCb(LoginPresenter.LoginActivityState.LOADER)
+            loginView.switchViewStateCb(LoginPresenter.LoginState.LOADER)
             val (confirmResponse, err) = async(Dispatchers.Default) {
                 api.confirm(phone, code)
             }.await()
             if (err == null && confirmResponse != null) {
-                loginActivity.gotUserCredentials(confirmResponse.user.id, confirmResponse.accessToken)
+                loginView.submitUserCredentials(confirmResponse.user.id, confirmResponse.accessToken)
             } else {
-                loginActivity.gotWrongConfirmationNumber()
-                loginActivity.switchViewStateCb(LoginPresenter.LoginActivityState.CONFIRMATION)
+                loginView.showWrongConfirmationNumber()
+                loginView.switchViewStateCb(LoginPresenter.LoginState.CONFIRMATION)
             }
         }
     }

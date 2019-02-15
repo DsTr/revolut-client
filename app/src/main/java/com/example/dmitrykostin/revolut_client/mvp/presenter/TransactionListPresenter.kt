@@ -1,18 +1,17 @@
 package com.example.dmitrykostin.revolut_client.mvp.presenter
 
-import com.example.dmitrykostin.revolut_client.mvp.activity.TransactionsListActivityInterface
+import com.example.dmitrykostin.revolut_client.mvp.activity.TransactionsListView
 
-interface TransactionListPresenterInterface: BasePresenter {
+interface TransactionListPresenter: BasePresenter {
     enum class ReasonToLoginUser {
         FIRST_LAUNCH,
         EXPIRED_TOKEN,
         SIGNOUT
     }
-    fun activityLoaded()
+    fun viewLoaded()
     fun loadMoreClick()
     fun logOutClick()
     fun newCredentialsRetrievedFromUser(userId: String, token: String)
-    fun attachView(view: TransactionsListActivityInterface)
+    fun attachView(view: TransactionsListView)
     fun detachView()
-
 }

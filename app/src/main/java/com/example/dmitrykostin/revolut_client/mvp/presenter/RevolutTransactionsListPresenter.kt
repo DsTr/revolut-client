@@ -1,34 +1,34 @@
 package com.example.dmitrykostin.revolut_client.mvp.presenter
 
 import com.example.dmitrykostin.revolut_client.revolut_api.Credentials
-import com.example.dmitrykostin.revolut_client.mvp.activity.TransactionsListActivityInterface
+import com.example.dmitrykostin.revolut_client.mvp.activity.TransactionsListView
 import com.example.dmitrykostin.revolut_client.mvp.model.TransactionsListModel
 import com.example.dmitrykostin.revolut_client.revolut_api.response.Transaction
-import com.example.dmitrykostin.revolut_client.util.CredentialsStorage
+import com.example.dmitrykostin.revolut_client.credentials.CredentialsStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
 
-class RevolutTransactionsListPresenter(val credentialsKeeper: CredentialsStorage, val transactionsListModel: TransactionsListModel) : CoroutinePresenter(), TransactionListPresenterInterface {
+class RevolutTransactionsListPresenter(val credentialsKeeper: CredentialsStorage, val transactionsListModel: TransactionsListModel) : CoroutinePresenter(), TransactionListPresenter {
 
-    var transactionsListActivity: TransactionsListActivityInterface? = null
+    var transactionsListView: TransactionsListView? = null
     private val transactionsToDisplay: ArrayList<Transaction> = ArrayList(0)
     private var loadingInProgress: AtomicBoolean = AtomicBoolean(false)
 
-    override fun attachView(view: TransactionsListActivityInterface) {
-        transactionsListActivity = view
+    override fun attachView(view: TransactionsListView) {
+        transactionsListView = view
     }
 
     override fun detachView() {
-        transactionsListActivity = null
+        transactionsListView = null
     }
 
-    override fun activityLoaded() {
+    override fun viewLoaded() {
         if (!transactionsToDisplay.isEmpty()) {
-            transactionsListActivity?.gotNewDatasetToDisplay(transactionsToDisplay)
+            transactionsListView?.displayNewDataset(transactionsToDisplay)
         } else if(loadingInProgress.get()) {
-            transactionsListActivity?.doSwitchLoaderState(true)
+            transactionsListView?.doSwitchLoaderState(true)
         } else {
             loadTransactionsFromApi()
         }
@@ -36,7 +36,7 @@ class RevolutTransactionsListPresenter(val credentialsKeeper: CredentialsStorage
 
     override fun loadMoreClick() {
         if(loadingInProgress.get()) {
-            transactionsListActivity?.doSwitchLoaderState(true)
+            transactionsListView?.doSwitchLoaderState(true)
         } else {
             loadTransactionsFromApi()
         }
@@ -44,7 +44,7 @@ class RevolutTransactionsListPresenter(val credentialsKeeper: CredentialsStorage
 
     override fun logOutClick() {
         credentialsKeeper.clearCredentials()
-        transactionsListActivity?.doNewUserCredentialsRequest(TransactionListPresenterInterface.ReasonToLoginUser.SIGNOUT)
+        transactionsListView?.openAuthorizationDialog(TransactionListPresenter.ReasonToLoginUser.SIGNOUT)
     }
 
     override fun newCredentialsRetrievedFromUser(userId: String, token: String) {
@@ -61,7 +61,7 @@ class RevolutTransactionsListPresenter(val credentialsKeeper: CredentialsStorage
                 return@launch
             }
 
-            transactionsListActivity?.doSwitchLoaderState(true)
+            transactionsListView?.doSwitchLoaderState(true)
             val (newTransactionList, err) = async(Dispatchers.IO) {
                 transactionsListModel.loadMore(credentialsHolder)
             }.await()
@@ -70,18 +70,18 @@ class RevolutTransactionsListPresenter(val credentialsKeeper: CredentialsStorage
 
             if (newTransactionList != null) {
                 transactionsToDisplay.addAll(newTransactionList)
-                transactionsListActivity?.gotNewDatasetToDisplay(transactionsToDisplay)
+                transactionsListView?.displayNewDataset(transactionsToDisplay)
             } else {
                 if (err?.loadErrorType == TransactionsListModel.LoadErrorType.WRONG_CREDENTIALS) {
-                    transactionsListActivity?.doNewUserCredentialsRequest(TransactionListPresenterInterface.ReasonToLoginUser.EXPIRED_TOKEN)
+                    transactionsListView?.openAuthorizationDialog(TransactionListPresenter.ReasonToLoginUser.EXPIRED_TOKEN)
                 } else {
-                    transactionsListActivity?.gotNetworkFailure()
+                    transactionsListView?.displayNetworkFailure()
                 }
             }
         } else {
             // Did not have token before
-            transactionsListActivity?.doNewUserCredentialsRequest(TransactionListPresenterInterface.ReasonToLoginUser.FIRST_LAUNCH)
+            transactionsListView?.openAuthorizationDialog(TransactionListPresenter.ReasonToLoginUser.FIRST_LAUNCH)
         }
-        transactionsListActivity?.doSwitchLoaderState(false)
+        transactionsListView?.doSwitchLoaderState(false)
     }
 }

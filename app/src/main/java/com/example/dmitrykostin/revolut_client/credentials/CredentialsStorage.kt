@@ -1,4 +1,4 @@
-package com.example.dmitrykostin.revolut_client.util
+package com.example.dmitrykostin.revolut_client.credentials
 
 import com.example.dmitrykostin.revolut_client.revolut_api.Credentials
 

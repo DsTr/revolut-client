@@ -13,9 +13,9 @@ import com.example.dmitrykostin.revolut_client.mvp.presenter.RevolutLoginPresent
 
 import kotlinx.android.synthetic.main.activity_login.*
 
-class LoginActivity : BaseActivity(), LoginActivityInterface {
+class LoginActivity : BaseActivity(), LoginView {
 
-    lateinit var loginRepresenter: LoginPresenter;
+    private lateinit var loginPresenter: LoginPresenter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,29 +30,29 @@ class LoginActivity : BaseActivity(), LoginActivityInterface {
             }
         }
 
-        phone.text.insert(0,"+4407446744008");
+        //phone.text.insert(0,"+4407446744008");
         email_sign_in_button.setOnClickListener { attemptLogin() }
         confirm_sms_button.setOnClickListener { attemptConfirm() }
 
-        loginRepresenter = createConcreteLoginRepresenter()
+        loginPresenter = createConcreteLoginRepresenter()
 
-        cancel_confirm_sms_button.setOnClickListener { loginRepresenter.userCanceledConfirmation() }
+        cancel_confirm_sms_button.setOnClickListener { loginPresenter.userCancelClicked() }
     }
 
     private fun createConcreteLoginRepresenter() : LoginPresenter {
-        return RevolutLoginPresenter(this);
+        return RevolutLoginPresenter(this)
     }
 
-    override fun gotWrongCredentials() {
+    override fun showWrongCredentials() {
         password.error = getString(R.string.error_invalid_password)
         password.requestFocus()
     }
 
-    override fun gotWrongConfirmationNumber() {
-        sms_code_input.error = "Wrong code";
+    override fun showWrongConfirmationNumber() {
+        sms_code_input.error = "Wrong code"
     }
 
-    override fun gotUserCredentials(userId: String, accessToken: String) {
+    override fun submitUserCredentials(userId: String, accessToken: String) {
         val result = Intent()
         result.putExtra(LoginActivity.INTENT_KEY_USER_ID, userId)
         result.putExtra(LoginActivity.INTENT_KEY_TOKEN, accessToken)
@@ -69,7 +69,7 @@ class LoginActivity : BaseActivity(), LoginActivityInterface {
         val phoneStr = phone.text.toString()
         val passwordStr = password.text.toString()
 
-        loginRepresenter.tryToLogin(phoneStr, passwordStr)
+        loginPresenter.userLogInClicked(phoneStr, passwordStr)
     }
 
     private fun attemptConfirm() {
@@ -79,65 +79,45 @@ class LoginActivity : BaseActivity(), LoginActivityInterface {
         val phoneStr = phone.text.toString()
         val smsCodeText = sms_code_input.text.toString()
 
-        loginRepresenter.processConfirmRequest(phoneStr, smsCodeText)
+        loginPresenter.userConfirmSmsClicked(phoneStr, smsCodeText)
     }
 
     /**
      * Changes the current visible form
      */
-    override fun switchViewStateCb(loginActivityState: LoginPresenter.LoginActivityState) {
+    override fun switchViewStateCb(loginState: LoginPresenter.LoginState) {
         val shortAnimTime = resources.getInteger(android.R.integer.config_shortAnimTime).toLong()
 
-        val stateToFormMap = arrayListOf<Pair<View, LoginPresenter.LoginActivityState>>(
+        val stateToFormMap = arrayListOf<Pair<View, LoginPresenter.LoginState>>(
             Pair(login_form,
-                LoginPresenter.LoginActivityState.LOGIN
+                LoginPresenter.LoginState.LOGIN
             ),
-            Pair(progress, LoginPresenter.LoginActivityState.LOADER),
+            Pair(progress, LoginPresenter.LoginState.LOADER),
             Pair(confirm_form,
-                LoginPresenter.LoginActivityState.CONFIRMATION
+                LoginPresenter.LoginState.CONFIRMATION
             )
         )
 
         for ( (view, mappedState) in stateToFormMap) {
-            view.visibility = if (loginActivityState == mappedState) View.VISIBLE else View.GONE
+            view.visibility = if (loginState == mappedState) View.VISIBLE else View.GONE
             view.animate()
                 .setDuration(shortAnimTime)
-                .alpha((if (loginActivityState == mappedState) 1 else 0).toFloat())
+                .alpha((if (loginState == mappedState) 1 else 0).toFloat())
                 .setListener(object : AnimatorListenerAdapter() {
                     override fun onAnimationEnd(animation: Animator) {
-                        view.visibility = if (loginActivityState == mappedState) View.VISIBLE else View.GONE
+                        view.visibility = if (loginState == mappedState) View.VISIBLE else View.GONE
                     }
                 })
         }
     }
 
-    override fun onSaveInstanceState(outState: Bundle?) {
-        super.onSaveInstanceState(outState)
-        val phoneStr = phone.text.toString()
-        outState?.putString(LAST_ENTERED_PHONE_ID, phoneStr)
-    }
-
-    override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
-        super.onRestoreInstanceState(savedInstanceState)
-        val phoneStr = phone.text.toString()
-        val savedPhone = savedInstanceState?.getString(LAST_ENTERED_PHONE_ID)
-        if (null != savedPhone) {
-            // TODO: Можно ли нормально вытавить текст без 2 методов?
-            with(phone.text) {
-                clear()
-                insert(0, savedPhone)
-            }
-        }
-    }
-
     override fun onDestroy() {
         super.onDestroy()
-        loginRepresenter.destroy()
+        loginPresenter.destroy()
     }
 
     companion object {
-        val INTENT_KEY_TOKEN = "access_token";
-        val INTENT_KEY_USER_ID = "user_id";
-        val LAST_ENTERED_PHONE_ID = "android:enteredPhone"
+        const val INTENT_KEY_TOKEN = "access_token"
+        const val INTENT_KEY_USER_ID = "user_id"
     }
 }

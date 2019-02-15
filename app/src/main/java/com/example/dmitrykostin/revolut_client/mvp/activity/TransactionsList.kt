@@ -16,20 +16,16 @@ import com.example.dmitrykostin.revolut_client.R
 import com.example.dmitrykostin.revolut_client.mvp.adapters.TransactionsListViewAdapter
 import com.example.dmitrykostin.revolut_client.mvp.model.RevolutTransactionsListModel
 import com.example.dmitrykostin.revolut_client.mvp.presenter.RevolutTransactionsListPresenter
-import com.example.dmitrykostin.revolut_client.util.SharedPreferencesCredentialsStorage
+import com.example.dmitrykostin.revolut_client.credentials.SharedPreferencesCredentialsStorage
 import android.view.Menu
 import android.view.MenuItem
-import com.example.dmitrykostin.revolut_client.mvp.presenter.TransactionListPresenterInterface
+import com.example.dmitrykostin.revolut_client.mvp.presenter.TransactionListPresenter
 
-class TransactionsList : BaseActivity(), TransactionsListActivityInterface {
-    companion object {
-        val LOGIN_REQUEST = 1;
-    }
-
+class TransactionsList : BaseActivity(), TransactionsListView {
     private lateinit var viewAdapter: TransactionsListViewAdapter
     private val transactionListDataset: ArrayList<Transaction> = ArrayList(0)
 
-    private lateinit var transactionsListPresenter: TransactionListPresenterInterface;
+    private lateinit var transactionsListPresenter: TransactionListPresenter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,12 +33,11 @@ class TransactionsList : BaseActivity(), TransactionsListActivityInterface {
         setSupportActionBar(toolbar)
 
         prepareTransactionListView()
-        prepareRepresenter()
+        preparePresenter()
     }
 
     private fun prepareTransactionListView() {
-        viewAdapter =
-                TransactionsListViewAdapter(transactionListDataset)
+        viewAdapter = TransactionsListViewAdapter(transactionListDataset)
         viewAdapter.loadMoreButtonClickCb = {transactionsListPresenter.loadMoreClick()}
         transaction_list.layoutManager = LinearLayoutManager(this)
         transaction_list.adapter = viewAdapter
@@ -50,37 +45,37 @@ class TransactionsList : BaseActivity(), TransactionsListActivityInterface {
         transaction_list.setHasFixedSize(true)
     }
 
-    private fun prepareRepresenter() {
-        if (null != lastCustomNonConfigurationInstance) {
-            transactionsListPresenter = lastCustomNonConfigurationInstance as TransactionListPresenterInterface
+    private fun preparePresenter() {
+        transactionsListPresenter = if (null != lastCustomNonConfigurationInstance) {
+            lastCustomNonConfigurationInstance as TransactionListPresenter
         } else {
-            transactionsListPresenter = createConcreteTransactionListRepresenter()
+            createConcreteTransactionListRepresenter()
         }
         transactionsListPresenter.attachView(this)
-        transactionsListPresenter.activityLoaded()
+        transactionsListPresenter.viewLoaded()
     }
 
-    private fun createConcreteTransactionListRepresenter() : TransactionListPresenterInterface {
+    private fun createConcreteTransactionListRepresenter() : TransactionListPresenter {
         val sharedPreferencesCredentialsKeeper = SharedPreferencesCredentialsStorage(getSharedPreferences())
         return RevolutTransactionsListPresenter(sharedPreferencesCredentialsKeeper, RevolutTransactionsListModel())
     }
 
-    override fun gotNewDatasetToDisplay(newTransactionsList: List<Transaction>) {
+    override fun displayNewDataset(newTransactionsList: List<Transaction>) {
         viewAdapter.transactionsDataset = newTransactionsList
         viewAdapter.notifyDataSetChanged()
     }
 
-    override fun doNewUserCredentialsRequest(reasonToRequest: TransactionListPresenterInterface.ReasonToLoginUser) {
-        if (reasonToRequest == TransactionListPresenterInterface.ReasonToLoginUser.EXPIRED_TOKEN) {
-            Toast.makeText(baseContext, "Wrong credentials, authorize again", Toast.LENGTH_SHORT).show();
+    override fun openAuthorizationDialog(reasonToRequest: TransactionListPresenter.ReasonToLoginUser) {
+        if (reasonToRequest == TransactionListPresenter.ReasonToLoginUser.EXPIRED_TOKEN) {
+            Toast.makeText(baseContext, "Wrong credentials, authorize again", Toast.LENGTH_SHORT).show()
         }
         transactionListDataset.clear()
         viewAdapter.notifyDataSetChanged()
         startLoginActivity()
     }
 
-    override fun gotNetworkFailure() {
-        Toast.makeText(baseContext, "Network failure, try again later", Toast.LENGTH_LONG).show();
+    override fun displayNetworkFailure() {
+        Toast.makeText(baseContext, "Network failure, try again later", Toast.LENGTH_LONG).show()
     }
 
     override fun doSwitchLoaderState(loadingState: Boolean) {
@@ -89,7 +84,7 @@ class TransactionsList : BaseActivity(), TransactionsListActivityInterface {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        val id = item.getItemId()
+        val id = item.itemId
 
         return if (id == R.id.action_logout) {
             transactionsListPresenter.logOutClick()
@@ -120,8 +115,8 @@ class TransactionsList : BaseActivity(), TransactionsListActivityInterface {
 
         if (requestCode == LOGIN_REQUEST) {
             if (resultCode == Activity.RESULT_OK) {
-                val userId = data?.getStringExtra(LoginActivity.INTENT_KEY_USER_ID);
-                val token = data?.getStringExtra(LoginActivity.INTENT_KEY_TOKEN);
+                val userId = data?.getStringExtra(LoginActivity.INTENT_KEY_USER_ID)
+                val token = data?.getStringExtra(LoginActivity.INTENT_KEY_TOKEN)
 
                 if (null != token && userId != null) {
                     transactionsListPresenter.newCredentialsRetrievedFromUser(userId, token)
@@ -140,5 +135,9 @@ class TransactionsList : BaseActivity(), TransactionsListActivityInterface {
 
     override fun onRetainCustomNonConfigurationInstance(): Any {
         return transactionsListPresenter
+    }
+
+    companion object {
+        const val LOGIN_REQUEST = 1
     }
 }
