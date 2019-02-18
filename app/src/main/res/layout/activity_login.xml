@@ -60,7 +60,7 @@
                         android:imeOptions="actionUnspecified"
                         android:inputType="numberPassword"
                         android:maxLines="1"
-                        android:singleLine="true"/>
+                        android:singleLine="true" android:autofillHints="password"/>
 
             </android.support.design.widget.TextInputLayout>
 

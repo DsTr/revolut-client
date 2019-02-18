@@ -9,10 +9,11 @@ import com.example.dmitrykostin.revolut_client.R
 import com.example.dmitrykostin.revolut_client.revolut_api.response.Transaction
 import java.text.DateFormat
 
-class TransactionsListViewAdapter(var transactionsDataset: List<Transaction>) : RecyclerView.Adapter<TransactionsListViewAdapter.BasicLayoutViewHolder>() {
+class TransactionsListViewAdapter(var transactionsDataset: List<Transaction>) :
+    RecyclerView.Adapter<TransactionsListViewAdapter.BasicLayoutViewHolder>() {
     companion object {
-        val VIEW_TYPE_TRANSACTION = 1
-        val VIEW_TYPE_LOADER = 2
+        const val VIEW_TYPE_TRANSACTION = 1
+        const val VIEW_TYPE_LOADER = 2
     }
 
     var loadingState = false
@@ -24,22 +25,22 @@ class TransactionsListViewAdapter(var transactionsDataset: List<Transaction>) : 
     }
 
     open class LoaderViewHolder(layout: ViewGroup) : BasicLayoutViewHolder(layout) {
-        val loaderView = layout.findViewById<View>(R.id.loader_list_item_loader)
-        val loadMoreView = layout.findViewById<View>(R.id.load_more_button)
+        private val loaderView = layout.findViewById<View>(R.id.loader_list_item_loader)
+        private val loadMoreView = layout.findViewById<View>(R.id.load_more_button)
         var loadMoreButtonClickCb: (() -> Unit)? = null
 
         override fun updateData(transaction: Transaction?, isLoadingState: Boolean) {
             loaderView.visibility = if (isLoadingState) View.VISIBLE else View.GONE
             loadMoreView.visibility = if (isLoadingState) View.GONE else View.VISIBLE
-            loadMoreView.setOnClickListener({ loadMoreButtonClickCb?.invoke() })
+            loadMoreView.setOnClickListener { loadMoreButtonClickCb?.invoke() }
         }
     }
 
     class TransactionViewHolder(layout: ViewGroup) : BasicLayoutViewHolder(layout) {
-        val infoView = layout.findViewById<TextView>(R.id.info_text_view)
-        val amountView = layout.findViewById<TextView>(R.id.amount)
-        val dateView = layout.findViewById<TextView>(R.id.date_view)
-        val additionalInfoView = layout.findViewById<TextView>(R.id.additional_info)
+        private val infoView = layout.findViewById<TextView>(R.id.info_text_view)!!
+        private val amountView = layout.findViewById<TextView>(R.id.amount)!!
+        private val dateView = layout.findViewById<TextView>(R.id.date_view)!!
+        private val additionalInfoView = layout.findViewById<TextView>(R.id.additional_info)!!
 
         override fun updateData(transaction: Transaction?, isLoadingState: Boolean) {
             infoView.text = transaction?.description
@@ -65,8 +66,10 @@ class TransactionsListViewAdapter(var transactionsDataset: List<Transaction>) : 
         }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup,
-                                    viewType: Int): BasicLayoutViewHolder {
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int
+    ): BasicLayoutViewHolder {
         if (viewType == VIEW_TYPE_TRANSACTION) {
             val layout = LayoutInflater.from(parent.context)
                 .inflate(R.layout.transaction_list_item, parent, false) as ViewGroup

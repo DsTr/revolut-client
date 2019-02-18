@@ -8,17 +8,11 @@
     <string name="action_confirm">Confirm</string>
     <string name="action_select_another_phone">Select another phone</string>
     <string name="prompt_confirm">Code from SMS</string>
-    <string name="error_invalid_email">This email address is invalid</string>
     <string name="error_invalid_password">This password is too short</string>
-    <string name="error_incorrect_password">This password is incorrect</string>
-    <string name="error_field_required">This field is required</string>
-    <string name="permission_rationale">"Contacts permissions are needed for providing email
-        completions."
-    </string>
     <string name="title_activity_transactions_list">Revolut client</string>
-
-
     <string name="preference_file_key">com.example.dmitrykostin.revolut_client.preferences</string>
-    <string name="saved_user_id_key">user_id</string>
-    <string name="saved_token_key">access_token</string>
+    <string name="amount">Amount</string>
+    <string name="date">Date</string>
+    <string name="log_out">Log Out</string>
+    <string name="load_more">Load more</string>
 </resources>

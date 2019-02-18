@@ -5,21 +5,20 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
-import android.support.v7.widget.LinearLayoutManager
-import com.example.dmitrykostin.revolut_client.revolut_api.response.Transaction
-
-import kotlinx.android.synthetic.main.activity_transactions_list.*
-import kotlinx.android.synthetic.main.content_transactions_list.*
 import android.support.v7.widget.DividerItemDecoration
+import android.support.v7.widget.LinearLayoutManager
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.Toast
 import com.example.dmitrykostin.revolut_client.R
+import com.example.dmitrykostin.revolut_client.credentials.SharedPreferencesCredentialsStorage
 import com.example.dmitrykostin.revolut_client.mvp.adapters.TransactionsListViewAdapter
 import com.example.dmitrykostin.revolut_client.mvp.model.RevolutTransactionsListModel
 import com.example.dmitrykostin.revolut_client.mvp.presenter.RevolutTransactionsListPresenter
-import com.example.dmitrykostin.revolut_client.credentials.SharedPreferencesCredentialsStorage
-import android.view.Menu
-import android.view.MenuItem
 import com.example.dmitrykostin.revolut_client.mvp.presenter.TransactionListPresenter
+import com.example.dmitrykostin.revolut_client.revolut_api.response.Transaction
+import kotlinx.android.synthetic.main.activity_transactions_list.*
+import kotlinx.android.synthetic.main.content_transactions_list.*
 
 class TransactionsList : BaseActivity(), TransactionsListView {
     private lateinit var viewAdapter: TransactionsListViewAdapter
@@ -38,7 +37,7 @@ class TransactionsList : BaseActivity(), TransactionsListView {
 
     private fun prepareTransactionListView() {
         viewAdapter = TransactionsListViewAdapter(transactionListDataset)
-        viewAdapter.loadMoreButtonClickCb = {transactionsListPresenter.loadMoreClick()}
+        viewAdapter.loadMoreButtonClickCb = { transactionsListPresenter.loadMoreClick() }
         transaction_list.layoutManager = LinearLayoutManager(this)
         transaction_list.adapter = viewAdapter
         transaction_list.addItemDecoration(DividerItemDecoration(this, LinearLayoutManager.VERTICAL))
@@ -55,7 +54,7 @@ class TransactionsList : BaseActivity(), TransactionsListView {
         transactionsListPresenter.viewLoaded()
     }
 
-    private fun createConcreteTransactionListRepresenter() : TransactionListPresenter {
+    private fun createConcreteTransactionListRepresenter(): TransactionListPresenter {
         val sharedPreferencesCredentialsKeeper = SharedPreferencesCredentialsStorage(getSharedPreferences())
         return RevolutTransactionsListPresenter(sharedPreferencesCredentialsKeeper, RevolutTransactionsListModel())
     }

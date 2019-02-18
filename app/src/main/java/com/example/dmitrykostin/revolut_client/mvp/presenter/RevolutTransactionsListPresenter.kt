@@ -1,18 +1,21 @@
 package com.example.dmitrykostin.revolut_client.mvp.presenter
 
-import com.example.dmitrykostin.revolut_client.revolut_api.Credentials
+import com.example.dmitrykostin.revolut_client.credentials.CredentialsStorage
 import com.example.dmitrykostin.revolut_client.mvp.activity.TransactionsListView
 import com.example.dmitrykostin.revolut_client.mvp.model.TransactionsListModel
+import com.example.dmitrykostin.revolut_client.revolut_api.Credentials
 import com.example.dmitrykostin.revolut_client.revolut_api.response.Transaction
-import com.example.dmitrykostin.revolut_client.credentials.CredentialsStorage
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicBoolean
 
-class RevolutTransactionsListPresenter(val credentialsKeeper: CredentialsStorage, val transactionsListModel: TransactionsListModel) : CoroutinePresenter(), TransactionListPresenter {
+class RevolutTransactionsListPresenter(
+    private val credentialsKeeper: CredentialsStorage,
+    private val transactionsListModel: TransactionsListModel
+) : CoroutinePresenter(), TransactionListPresenter {
 
-    var transactionsListView: TransactionsListView? = null
+    private var transactionsListView: TransactionsListView? = null
     private val transactionsToDisplay: ArrayList<Transaction> = ArrayList(0)
     private var loadingInProgress: AtomicBoolean = AtomicBoolean(false)
 
@@ -27,7 +30,7 @@ class RevolutTransactionsListPresenter(val credentialsKeeper: CredentialsStorage
     override fun viewLoaded() {
         if (!transactionsToDisplay.isEmpty()) {
             transactionsListView?.displayNewDataset(transactionsToDisplay)
-        } else if(loadingInProgress.get()) {
+        } else if (loadingInProgress.get()) {
             transactionsListView?.doSwitchLoaderState(true)
         } else {
             loadTransactionsFromApi()
@@ -35,7 +38,7 @@ class RevolutTransactionsListPresenter(val credentialsKeeper: CredentialsStorage
     }
 
     override fun loadMoreClick() {
-        if(loadingInProgress.get()) {
+        if (loadingInProgress.get()) {
             transactionsListView?.doSwitchLoaderState(true)
         } else {
             loadTransactionsFromApi()
@@ -62,9 +65,9 @@ class RevolutTransactionsListPresenter(val credentialsKeeper: CredentialsStorage
             }
 
             transactionsListView?.doSwitchLoaderState(true)
-            val (newTransactionList, err) = async(Dispatchers.IO) {
+            val (newTransactionList, err) = withContext(Dispatchers.IO) {
                 transactionsListModel.loadMore(credentialsHolder)
-            }.await()
+            }
 
             loadingInProgress.set(false)
 

@@ -3,10 +3,10 @@ package com.example.dmitrykostin.revolut_client.credentials
 import android.content.SharedPreferences
 import com.example.dmitrykostin.revolut_client.revolut_api.Credentials
 
-class SharedPreferencesCredentialsStorage(val sharedPreferences: SharedPreferences) : CredentialsStorage {
+class SharedPreferencesCredentialsStorage(private val sharedPreferences: SharedPreferences) : CredentialsStorage {
     companion object {
-        val user_id_key = "user_id"
-        val token_key = "access_token"
+        const val user_id_key = "user_id"
+        const val token_key = "access_token"
     }
 
     override fun getCredentialsHolder(): Credentials? {

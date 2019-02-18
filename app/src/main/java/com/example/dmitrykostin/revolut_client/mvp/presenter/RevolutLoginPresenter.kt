@@ -3,10 +3,10 @@ package com.example.dmitrykostin.revolut_client.mvp.presenter
 import com.example.dmitrykostin.revolut_client.mvp.activity.LoginView
 import com.example.dmitrykostin.revolut_client.revolut_api.Api
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-class RevolutLoginPresenter(val loginView: LoginView) : CoroutinePresenter(), LoginPresenter {
+class RevolutLoginPresenter(private val loginView: LoginView) : CoroutinePresenter(), LoginPresenter {
     private val api by lazy {
         Api()
     }
@@ -21,9 +21,9 @@ class RevolutLoginPresenter(val loginView: LoginView) : CoroutinePresenter(), Lo
         } else {
             loginView.switchViewStateCb(LoginPresenter.LoginState.LOADER)
 
-            val (_, err) = async(Dispatchers.Default) {
+            val (_, err) = withContext(Dispatchers.Default) {
                 api.signIn(phone, user_password)
-            }.await()
+            }
 
             if (err == null) {
                 loginView.switchViewStateCb(LoginPresenter.LoginState.CONFIRMATION)
@@ -41,9 +41,9 @@ class RevolutLoginPresenter(val loginView: LoginView) : CoroutinePresenter(), Lo
             loginView.showWrongConfirmationNumber()
         } else {
             loginView.switchViewStateCb(LoginPresenter.LoginState.LOADER)
-            val (confirmResponse, err) = async(Dispatchers.Default) {
+            val (confirmResponse, err) = withContext(Dispatchers.Default) {
                 api.confirm(phone, code)
-            }.await()
+            }
             if (err == null && confirmResponse != null) {
                 loginView.submitUserCredentials(confirmResponse.user.id, confirmResponse.accessToken)
             } else {

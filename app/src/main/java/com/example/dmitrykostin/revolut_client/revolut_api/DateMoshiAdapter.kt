@@ -1,8 +1,8 @@
 package com.example.dmitrykostin.revolut_client.revolut_api
 
-import java.util.*
 import com.squareup.moshi.FromJson
 import com.squareup.moshi.ToJson
+import java.util.*
 
 class DateMoshiAdapter {
     @ToJson

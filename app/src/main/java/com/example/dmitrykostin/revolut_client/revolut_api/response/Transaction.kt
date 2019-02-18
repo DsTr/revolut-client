@@ -3,8 +3,6 @@ package com.example.dmitrykostin.revolut_client.revolut_api.response
 import com.squareup.moshi.Json
 import java.util.*
 
-typealias TransactionList = List<Transaction>
-
 data class Transaction(
     @Json(name = "id") val id: String?,
     @Json(name = "legId") val legId: String?,

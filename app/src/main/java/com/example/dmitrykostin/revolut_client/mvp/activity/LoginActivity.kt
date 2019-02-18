@@ -39,7 +39,7 @@ class LoginActivity : BaseActivity(), LoginView {
         cancel_confirm_sms_button.setOnClickListener { loginPresenter.userCancelClicked() }
     }
 
-    private fun createConcreteLoginRepresenter() : LoginPresenter {
+    private fun createConcreteLoginRepresenter(): LoginPresenter {
         return RevolutLoginPresenter(this)
     }
 
@@ -89,16 +89,18 @@ class LoginActivity : BaseActivity(), LoginView {
         val shortAnimTime = resources.getInteger(android.R.integer.config_shortAnimTime).toLong()
 
         val stateToFormMap = arrayListOf<Pair<View, LoginPresenter.LoginState>>(
-            Pair(login_form,
+            Pair(
+                login_form,
                 LoginPresenter.LoginState.LOGIN
             ),
             Pair(progress, LoginPresenter.LoginState.LOADER),
-            Pair(confirm_form,
+            Pair(
+                confirm_form,
                 LoginPresenter.LoginState.CONFIRMATION
             )
         )
 
-        for ( (view, mappedState) in stateToFormMap) {
+        for ((view, mappedState) in stateToFormMap) {
             view.visibility = if (loginState == mappedState) View.VISIBLE else View.GONE
             view.animate()
                 .setDuration(shortAnimTime)

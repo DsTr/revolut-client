@@ -10,10 +10,9 @@ interface TransactionsListModel {
         WRONG_CREDENTIALS
     }
 
-    class LoadError(val exception: Exception, val loadErrorType: LoadErrorType)
-        : Exception(exception) {
+    class LoadError(private val exception: Exception, val loadErrorType: LoadErrorType) : Exception(exception) {
         override fun toString(): String = "${exception.javaClass.canonicalName}: ${exception.message ?: "<no message>"}"
     }
 
-    fun loadMore(credentials: Credentials) : Result<Collection<Transaction>, LoadError>
+    fun loadMore(credentials: Credentials): Result<Collection<Transaction>, LoadError>
 }
